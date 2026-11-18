@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>법령 개정 모니터링</title>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f2f4f7;--card:#fff;--ink:#18212d;--sub:#5b6778;--line:#d9dee6;--brand:#1f4e79;--brand-d:#143a5c;--soft:#e7eef6;
+--rev:#b42318;--revbg:#fde7e4;--up:#9a5b00;--upbg:#fff1d6;--ok:#15803d;--okbg:#e4f5e9;--none:#6b7686;--nonebg:#eef1f5;--err:#7a2e0e;--errbg:#fbe4d6}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:0 16px 56px}
+.top{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;padding:26px 0 14px}
+.eyebrow{color:var(--brand);font-weight:700;font-size:13px}
+h1{margin:2px 0 4px;font-size:26px;line-height:1.25}
+.top p{margin:0;color:var(--sub);font-size:14px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 13px;font:inherit;font-size:14px;font-weight:600;cursor:pointer;color:var(--ink);text-decoration:none}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.sm{padding:4px 10px;font-size:13px}
+.statusbar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px}
+.statusbar b{font-variant-numeric:tabular-nums}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--ok)}
+.dot.bad{background:var(--rev)}.dot.warn{background:#d97706}
+.banner{margin-top:12px;border-radius:10px;padding:10px 14px;font-size:14px}
+.banner.sample{background:#fff7cc;border:1px solid #ecd36b;color:#5c4400}
+.banner.err{background:var(--errbg);border:1px solid #f0bfa1;color:var(--err)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:14px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.stat b{display:block;font-size:26px;line-height:1.2;font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--sub)}
+h2{font-size:18px;margin:26px 0 10px;display:flex;align-items:center;gap:8px}
+h2 small{font-size:13px;color:var(--sub);font-weight:400}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:12px}
+.rc{background:#fff;border:1px solid var(--line);border-left:5px solid var(--rev);border-radius:12px;padding:14px 16px;min-width:0}
+.rc.up{border-left-color:#d97706}
+.rc h3{margin:0 0 2px;font-size:16px}
+.rc .grp{font-size:12px;color:var(--sub)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;margin:10px 0;font-size:14px}
+.kv dt{color:var(--sub)}
+.kv dd{margin:0;font-variant-numeric:tabular-nums}
+.hint{font-size:13px;color:var(--sub);background:var(--nonebg);border-radius:8px;padding:7px 10px;margin:8px 0}
+.items{margin:8px 0 0;padding:0;list-style:none;font-size:13px}
+.items li{padding:4px 0;border-top:1px dashed #e4e8ee;display:flex;gap:8px}
+.items .art{flex:none;min-width:84px;color:var(--brand-d);font-weight:700}
+.review{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.review select,.review input{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit;font-size:13px;background:#fff}
+.review input{flex:1;min-width:160px}
+.badge{display:inline-flex;align-items:center;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700;white-space:nowrap}
+.b-rev{background:var(--revbg);color:var(--rev)}.b-up{background:var(--upbg);color:var(--up)}.b-ok{background:var(--okbg);color:var(--ok)}.b-none{background:var(--nonebg);color:var(--none)}.b-err{background:var(--errbg);color:var(--err)}
+.group{background:#fff;border:1px solid var(--line);border-radius:12px;margin-top:12px;overflow:hidden}
+.group-h{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:space-between;padding:12px 14px;background:#f8fafc;border-bottom:1px solid var(--line)}
+.group-h h3{margin:0;font-size:16px}
+.group-h .reg{font-size:12px;color:var(--sub)}
+.note{margin:0;padding:9px 14px;background:#fff7e6;border-bottom:1px solid #f3dfb5;font-size:13px;color:#6b4500}
+.scroll{overflow-x:auto}
+table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:760px}
+.t th,.t td{padding:9px 12px;border-bottom:1px solid #edf0f4;text-align:left;vertical-align:top}
+.t th{font-size:12px;color:var(--sub);font-weight:700;background:#fff}
+.t td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.t tr:last-child td{border-bottom:0}
+.t .nm{font-weight:600}
+.t .sub{display:block;font-size:12px;color:var(--sub);font-weight:400}
+details.ob{padding:0 14px 12px}
+details.ob summary{cursor:pointer;font-size:13px;color:var(--brand);font-weight:600;padding:10px 0 4px}
+.hist{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.empty{padding:18px;color:var(--sub);font-size:14px}
+.setup{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-top:14px}
+.setup ol{margin:8px 0 0;padding-left:20px}
+.setup li{margin:6px 0}
+.setup code{background:var(--nonebg);border-radius:4px;padding:1px 5px;font-size:13px}
+.settings{display:flex;flex-wrap:wrap;gap:12px;align-items:center;font-size:14px}
+.settings select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit;background:#fff}
+.foot{margin-top:26px;font-size:13px;color:var(--sub);display:grid;gap:6px}
+.foot b{color:var(--ink)}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+@media (max-width:640px){h1{font-size:21px}.cards{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <header class="top">
+  <div>
+   <div class="eyebrow">국가법령정보 Open API · 법규등록부 연결</div>
+   <h1>법령 개정 모니터링</h1>
+   <p id="subtitle">법규등록부에 등록된 법령의 공포일·시행일을 매일 확인하고, 바뀐 법령과 관련 의무사항을 보여줍니다.</p>
+  </div>
+  <div class="acts">
+   <a class="btn primary" id="runLink" href="#" target="_blank" rel="noopener">⟳ 지금 다시 확인</a>
+   <button type="button" class="btn" id="xlsxBtn">엑셀로 내려받기</button>
+  </div>
+ </header>
+
+ <div class="statusbar" id="statusbar">불러오는 중…</div>
+ <div id="banners"></div>
+ <div class="stats" id="stats"></div>
+
+ <section id="reviewSec"></section>
+ <section id="allSec"></section>
+ <section id="histSec"></section>
+
+ <h2>설정</h2>
+ <div class="setup settings">
+  <label>검토 필요로 볼 기간: 공포일로부터
+   <select id="days"><option>7</option><option>14</option><option>30</option><option>60</option><option>90</option></select> 일 이내</label>
+  <span style="color:var(--sub);font-size:13px">검토 기록과 이 설정은 지금 쓰는 브라우저에만 저장됩니다.</span>
+ </div>
+
+ <div class="foot">
+  <div><b>판단은 담당자가</b> 이 화면은 법령이 “바뀌었다”는 사실만 알려줍니다. 우리 업무에 영향이 있는지는 원문(신·구조문 대비표)을 열어 담당자가 판단하세요. 특히 ‘타법개정’은 다른 법이 바뀌면서 용어만 따라 바뀐 경우가 많습니다.</div>
+  <div><b>자료 출처</b> 법제처 국가법령정보센터 Open API(lawSearch.do). 매일 오전 6시 무렵 자동으로 확인합니다.</div>
+ </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+var LS='lawMonitor.v1';
+var cfg=null,data=null,history=[],sample=false;
+var prefs=readPrefs();
+var DAY=864e5;
+function $(s){return document.querySelector(s);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function readPrefs(){try{return JSON.parse(localStorage.getItem(LS))||{};}catch(e){return {};}}
+function savePrefs(){try{localStorage.setItem(LS,JSON.stringify(prefs));}catch(e){}}
+prefs.reviews=prefs.reviews||{};prefs.days=prefs.days||0;
+function pad(n){return n<10?'0'+n:''+n;}
+function today(){var d=new Date();return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate());}
+function toDate(s){return s&&s.length===8?new Date(+s.slice(0,4),+s.slice(4,6)-1,+s.slice(6,8)):null;}
+function fmt(s){if(!s)return '-';if(s.length===8)return s.slice(0,4)+'. '+(+s.slice(4,6))+'. '+(+s.slice(6,8))+'.';return s;}
+function ago(s){var d=toDate(s);if(!d)return null;var t=toDate(today());return Math.round((t-d)/DAY);}
+function reviewDays(){return +prefs.days||(cfg&&cfg.reviewDays)||30;}
+function lawLink(name){return 'https://www.law.go.kr/법령/'+encodeURIComponent(name);}
+function repoInfo(){
+ var h=location.hostname,m=h.match(/^([^.]+)\.github\.io$/i);
+ if(!m)return null;
+ var repo=location.pathname.split('/').filter(Boolean)[0]||(m[1]+'.github.io');
+ return {owner:m[1],repo:repo};
+}
+function getJSON(urls){
+ var i=0;
+ return new Promise(function(resolve,reject){
+  (function next(){
+   if(i>=urls.length){reject(new Error('not found'));return;}
+   var u=urls[i++];
+   fetch(u,{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json();}).then(resolve,next);
+  })();
+ });
+}
+function dataUrls(file){
+ var r=repoInfo(),list=[];
+ if(r)list.push('https://raw.githubusercontent.com/'+r.owner+'/'+r.repo+'/main/'+file+'?t='+Date.now());
+ list.push(file+'?t='+Date.now());
+ return list;
+}
+
+/* ---------- 상태 판단 ---------- */
+function reviewKey(name,L){return name+'|'+(L.ancYd||'')+'|'+(L.mst||'');}
+function info(name){
+ var L=data&&data.laws&&data.laws[name],err=data&&data.errors&&data.errors[name];
+ if(!L)return {name:name,missing:true,err:err};
+ var since=ago(L.ancYd),rd=reviewDays();
+ var changedRecent=L.changedAt&&ago(L.changedAt.replace(/-/g,''))<=rd;
+ var recent=(since!==null&&since<=rd)||changedRecent;
+ var up=(L.upcoming||[]).filter(function(u){return u.efYd>today();});
+ var notYet=L.efYd&&L.efYd>today();
+ var rv=prefs.reviews[reviewKey(name,L)];
+ var state=recent&&!(rv&&rv.done)?'rev':(recent&&rv&&rv.done?'ok':(up.length||notYet?'up':'none'));
+ return {name:name,L:L,err:err,since:since,recent:recent,up:up,notYet:notYet,rv:rv,state:state};
+}
+function badge(x){
+ if(x.missing)return '<span class="badge b-err">'+(x.err?'조회 실패':'자료 없음')+'</span>';
+ return {rev:'<span class="badge b-rev">검토 필요</span>',ok:'<span class="badge b-ok">검토 완료</span>',up:'<span class="badge b-up">시행 예정</span>',none:'<span class="badge b-none">변동 없음</span>'}[x.state];
+}
+function groupOf(name){for(var i=0;i<cfg.groups.length;i++){if(cfg.groups[i].laws.indexOf(name)>=0)return cfg.groups[i];}return null;}
+function allNames(){var a=[];cfg.groups.forEach(function(g){a=a.concat(g.laws);});return a;}
+
+/* ---------- 그리기 ---------- */
+function renderStatus(){
+ var r=repoInfo();
+ $('#runLink').href=r?'https://github.com/'+r.owner+'/'+r.repo+'/actions/workflows/update-laws.yml':'https://github.com';
+ if(!data){
+  $('#statusbar').innerHTML='<span><span class="dot warn"></span>아직 조회 결과가 없습니다.</span><span style="color:var(--sub)">아래 순서대로 설정하면 첫 결과가 생깁니다.</span>';
+  return;
+ }
+ var t=data.fetchedAt?new Date(data.fetchedAt):null;
+ var when=t?t.toLocaleString('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}):'-';
+ var errN=Object.keys(data.errors||{}).length;
+ var stale=t&&(Date.now()-t.getTime())>2*DAY;
+ $('#statusbar').innerHTML='<span><span class="dot'+(data.ok===false?' bad':(errN||stale?' warn':''))+'"></span>마지막 확인 <b>'+esc(when)+'</b></span>'
+  +'<span>감시 법령 <b>'+allNames().length+'</b>개 · 분야 <b>'+cfg.groups.length+'</b>개</span>'
+  +(errN?'<span style="color:var(--rev)">조회 실패 <b>'+errN+'</b>개</span>':'')
+  +(stale?'<span style="color:#b45309">2일 넘게 갱신되지 않았어요. [지금 다시 확인]으로 실행해 보세요.</span>':'');
+}
+function renderBanners(){
+ var h='';
+ if(sample)h+='<div class="banner sample"><b>예시 화면입니다.</b> 실제 법령 정보가 아니라 화면 모양을 보여주기 위한 가짜 데이터예요. 설정을 마치면 실제 조회 결과로 바뀝니다.</div>';
+ if(data&&data.ok===false)h+='<div class="banner err"><b>최근 조회에 실패했어요.</b> '+esc(data.message||'')+' 아래 표는 마지막으로 성공한 결과입니다.</div>';
+ else if(data&&data.message)h+='<div class="banner err">'+esc(data.message)+' · 실패한 법령은 표에서 ‘조회 실패’로 표시됩니다.</div>';
+ $('#banners').innerHTML=h;
+}
+function renderStats(){
+ if(!data){$('#stats').innerHTML='';return;}
+ var xs=allNames().map(info);
+ var n=function(f){return xs.filter(f).length;};
+ var yr=n(function(x){return !x.missing&&x.since!==null&&x.since<=365;});
+ $('#stats').innerHTML=
+  '<div class="stat"><b style="color:var(--rev)">'+n(function(x){return x.state==='rev';})+'</b><span>검토 필요 (공포 '+reviewDays()+'일 이내)</span></div>'
+ +'<div class="stat"><b style="color:var(--up)">'+n(function(x){return x.up&&x.up.length||x.notYet;})+'</b><span>시행 예정인 개정</span></div>'
+ +'<div class="stat"><b>'+yr+'</b><span>최근 1년 안에 개정된 법령</span></div>'
+ +'<div class="stat"><b style="color:var(--ok)">'+n(function(x){return x.state==='ok';})+'</b><span>검토 완료</span></div>';
+}
+function itemsList(g){
+ if(!g||!g.items.length)return '';
+ return '<ul class="items">'+g.items.map(function(it){return '<li><span class="art">'+esc(it.art)+'</span><span>'+esc(it.item)+(it.target?' <span style="color:var(--sub)">· '+esc(it.target)+'</span>':'')+'</span></li>';}).join('')+'</ul>';
+}
+function reviewBox(x){
+ var k=reviewKey(x.name,x.L),rv=x.rv||{};
+ return '<div class="review" data-key="'+esc(k)+'">'
+  +'<select data-f="impact" aria-label="업무 영향"><option value="">업무 영향 판단</option>'+['영향 있음','영향 없음','확인 중'].map(function(v){return '<option'+(rv.impact===v?' selected':'')+'>'+v+'</option>';}).join('')+'</select>'
+  +'<input data-f="memo" placeholder="메모 (예: 제29조 교육시간 변경 → 교육계획 수정)" value="'+esc(rv.memo||'')+'">'
+  +'<button type="button" class="btn sm'+(rv.done?'':' primary')+'" data-done="'+esc(k)+'">'+(rv.done?'검토 취소':'검토 완료')+'</button>'
+  +(rv.done&&rv.date?'<span style="font-size:12px;color:var(--sub)">'+esc(rv.date)+' 완료</span>':'')+'</div>';
+}
+function renderReview(){
+ if(!data){$('#reviewSec').innerHTML=setupHTML();return;}
+ var xs=allNames().map(info).filter(function(x){return x.state==='rev'||x.state==='ok'&&x.recent;});
+ var ups=allNames().map(info).filter(function(x){return x.state==='up';});
+ var h='<h2>검토가 필요한 개정 <small>공포일 '+reviewDays()+'일 이내 · 새로 바뀐 것 먼저</small></h2>';
+ if(!xs.length)h+='<div class="hist"><div class="empty">최근 '+reviewDays()+'일 안에 공포된 개정이 없습니다.</div></div>';
+ else{
+  xs.sort(function(a,b){return (a.state==='rev'?0:1)-(b.state==='rev'?0:1)||(a.since-b.since);});
+  h+='<div class="cards">'+xs.map(function(x){var L=x.L,g=groupOf(x.name);
+   return '<article class="rc"><div class="grp">'+esc(g?g.title:'')+'</div><h3>'+esc(x.name)+' '+badge(x)+'</h3>'
+    +'<dl class="kv"><dt>개정</dt><dd>'+esc(L.kind||'-')+(L.ancNo?' (제'+esc(L.ancNo)+'호)':'')+'</dd><dt>공포일</dt><dd>'+fmt(L.ancYd)+' <span style="color:var(--sub)">· '+x.since+'일 전</span></dd><dt>시행일</dt><dd>'+fmt(L.efYd)+(x.notYet?' <span class="badge b-up">시행 전</span>':'')+'</dd><dt>소관부처</dt><dd>'+esc(L.dept||'-')+'</dd></dl>'
+    +(/타법/.test(L.kind||'')?'<div class="hint">타법개정은 다른 법이 바뀌면서 용어·조문 번호만 따라 바뀐 경우가 많아요. 원문에서 실제 내용 변경이 있는지 확인하세요.</div>':'')
+    +'<a class="btn sm" href="'+lawLink(x.name)+'" target="_blank" rel="noopener">원문·신구조문 보기 ↗</a>'
+    +(g&&g.items.length?'<div style="margin-top:10px;font-size:13px;font-weight:700">법규등록부 관련 의무사항</div>'+itemsList(g):'')
+    +reviewBox(x)+'</article>';}).join('')+'</div>';
+ }
+ if(ups.length){
+  h+='<h2>시행 예정 <small>공포는 됐지만 아직 시행 전인 개정</small></h2><div class="cards">'+ups.map(function(x){var L=x.L,list=x.up.length?x.up:[{ancYd:L.ancYd,efYd:L.efYd,kind:L.kind}];
+   return '<article class="rc up"><div class="grp">'+esc((groupOf(x.name)||{}).title||'')+'</div><h3>'+esc(x.name)+'</h3><dl class="kv">'+list.map(function(u){return '<dt>시행 '+fmt(u.efYd)+'</dt><dd>'+esc(u.kind||'')+' · 공포 '+fmt(u.ancYd)+'</dd>';}).join('')+'</dl><a class="btn sm" href="'+lawLink(x.name)+'" target="_blank" rel="noopener">원문 보기 ↗</a></article>';}).join('')+'</div>';
+ }
+ $('#reviewSec').innerHTML=h;
+}
+function renderAll(){
+ if(!cfg){$('#allSec').innerHTML='';return;}
+ var h='<h2>분야별 전체 현황 <small>'+esc(cfg.source||'')+'</small></h2>';
+ cfg.groups.forEach(function(g){
+  var xs=g.laws.map(info);
+  var flag=xs.some(function(x){return x.state==='rev';})?'<span class="badge b-rev">검토 필요</span>':(xs.some(function(x){return x.state==='up';})?'<span class="badge b-up">시행 예정</span>':'');
+  h+='<div class="group"><div class="group-h"><div><h3>'+esc(g.title)+' '+flag+'</h3><div class="reg">법규등록부: '+esc(g.registerName)+'</div></div></div>'
+   +(g.note?'<p class="note">'+esc(g.note)+'</p>':'')
+   +'<div class="scroll"><table class="t"><thead><tr><th>법령</th><th>제·개정</th><th>공포일</th><th>시행일</th><th>소관부처</th><th>상태</th></tr></thead><tbody>'
+   +xs.map(function(x){
+     if(x.missing)return '<tr><td class="nm">'+esc(x.name)+'<span class="sub">'+esc(x.err||'아직 조회 전')+'</span></td><td colspan="4" style="color:var(--sub)">-</td><td>'+badge(x)+'</td></tr>';
+     var L=x.L;
+     return '<tr><td class="nm"><a href="'+lawLink(x.name)+'" target="_blank" rel="noopener" style="color:inherit">'+esc(x.name)+'</a>'+(x.err?'<span class="sub" style="color:var(--rev)">오늘 조회 실패 · 지난 결과 표시</span>':'')+'</td>'
+      +'<td>'+esc(L.kind||'-')+(L.ancNo?'<span class="sub">제'+esc(L.ancNo)+'호</span>':'')+'</td>'
+      +'<td class="num">'+fmt(L.ancYd)+(x.since!==null?'<span class="sub">'+x.since+'일 전</span>':'')+'</td>'
+      +'<td class="num">'+fmt(L.efYd)+(x.up.length?'<span class="sub" style="color:var(--up)">다음 시행 '+fmt(x.up[0].efYd)+'</span>':'')+'</td>'
+      +'<td>'+esc(L.dept||'-')+'</td><td>'+badge(x)+'</td></tr>';
+   }).join('')+'</tbody></table></div>'
+   +(g.items.length?'<details class="ob"><summary>법규등록부 관련 의무사항 '+g.items.length+'개</summary>'+itemsList(g)+'</details>':'')+'</div>';
+ });
+ $('#allSec').innerHTML=h;
+}
+function renderHistory(){
+ if(!data){$('#histSec').innerHTML='';return;}
+ var h='<h2>변경 감지 기록 <small>매일 확인하다가 공포일이 바뀐 것을 발견한 날</small></h2><div class="hist">';
+ if(!history.length)h+='<div class="empty">아직 감지된 변경이 없습니다. 첫 조회 이후 법령이 바뀌면 여기에 쌓여요.</div>';
+ else h+='<div class="scroll"><table class="t"><thead><tr><th>감지일</th><th>법령</th><th>개정</th><th>공포일</th><th>시행일</th></tr></thead><tbody>'+history.slice(0,60).map(function(e){return '<tr><td class="num">'+esc(e.detectedAt)+'</td><td class="nm">'+esc(e.name)+'</td><td>'+esc(e.kind||'')+'</td><td class="num">'+fmt(e.fromAncYd)+' → '+fmt(e.toAncYd)+'</td><td class="num">'+fmt(e.efYd)+'</td></tr>';}).join('')+'</tbody></table></div>';
+ $('#histSec').innerHTML=h+'</div>';
+}
+function setupHTML(){
+ var r=repoInfo(),base=r?'https://github.com/'+r.owner+'/'+r.repo:'GitHub 저장소';
+ return '<div class="setup"><h2 style="margin-top:0">처음 한 번만 설정하면 됩니다</h2><ol>'
+  +'<li><b>인증값 받기</b>: <a href="https://open.law.go.kr" target="_blank" rel="noopener">open.law.go.kr</a> 가입 → OPEN API 신청 → 마이페이지에서 인증값(OC) 확인</li>'
+  +'<li><b>인증값 등록</b>: 저장소 <code>Settings → Secrets and variables → Actions → New repository secret</code>에 이름 <code>LAW_OC</code>, 값에 인증값</li>'
+  +'<li><b>자동 실행 파일 만들기</b>: 저장소에서 <code>Add file → Create new file</code>, 이름 칸에 <code>.github/workflows/update-laws.yml</code>을 적고 받은 파일 내용을 붙여 넣기</li>'
+  +'<li><b>첫 실행</b>: 위쪽 [지금 다시 확인] → <code>Run workflow</code>. 1~2분 뒤 이 화면을 새로고침</li></ol>'
+  +'<p style="font-size:13px;color:var(--sub);margin:10px 0 0">저장소: '+esc(base)+'</p>'
+  +'<button type="button" class="btn" id="sampleBtn" style="margin-top:12px">예시 화면 미리 보기</button></div>';
+}
+function render(){renderStatus();renderBanners();renderStats();renderReview();renderAll();renderHistory();$('#days').value=String(reviewDays());}
+
+/* ---------- 예시 데이터 ---------- */
+function makeSample(){
+ var d=new Date();function ymd(off){var x=new Date(d.getTime()-off*DAY);return x.getFullYear()+pad(x.getMonth()+1)+pad(x.getDate());}
+ var laws={},i=0;
+ allNames().forEach(function(n){i++;var anc=ymd(120+i*37%600),kind=i%4===0?'타법개정':'일부개정';laws[n]={name:n,mst:String(100000+i),ancYd:anc,ancNo:String(20000+i),efYd:anc,kind:kind,dept:'(예시) 소관부처',upcoming:[]};});
+ var a=allNames();
+ laws[a[0]].ancYd=ymd(22);laws[a[0]].efYd=ymd(-160);laws[a[0]].kind='일부개정';laws[a[0]].changedAt=new Date(d.getTime()-20*DAY).toISOString().slice(0,10);
+ laws[a[2]].ancYd=ymd(9);laws[a[2]].efYd=ymd(9);laws[a[2]].kind='타법개정';
+ laws[a[4]].upcoming=[{ancYd:ymd(40),efYd:ymd(-45),kind:'일부개정'}];
+ return {fetchedAt:new Date().toISOString(),ok:true,message:'',laws:laws,errors:{}};
+}
+
+/* ---------- 엑셀 ---------- */
+function exportXlsx(){
+ if(!data){alert('아직 조회 결과가 없습니다.');return;}
+ var rows=[['분야','법령','제·개정','공포번호','공포일','시행일','소관부처','상태','업무 영향','메모','검토일','법규등록부 관련 조항']];
+ cfg.groups.forEach(function(g){g.laws.forEach(function(n){var x=info(n),L=x.L||{},rv=x.rv||{};
+  rows.push([g.title,n,L.kind||'',L.ancNo||'',fmt(L.ancYd),fmt(L.efYd),L.dept||'',x.missing?'조회 실패':{rev:'검토 필요',ok:'검토 완료',up:'시행 예정',none:'변동 없음'}[x.state],rv.impact||'',rv.memo||'',rv.date||'',g.items.map(function(it){return it.art+' '+it.item;}).join(' / ')]);});});
+ var name='법령개정현황_'+today()+'.xlsx';
+ if(!window.XLSX){var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));a.download=name.replace('.xlsx','.csv');document.body.appendChild(a);a.click();a.remove();return;}
+ var ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:22},{wch:36},{wch:10},{wch:9},{wch:13},{wch:13},{wch:16},{wch:10},{wch:10},{wch:36},{wch:11},{wch:60}];
+ var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'법령 개정 현황');
+ if(history.length){var h=[['감지일','법령','개정','이전 공포일','새 공포일','시행일']].concat(history.map(function(e){return [e.detectedAt,e.name,e.kind,fmt(e.fromAncYd),fmt(e.toAncYd),fmt(e.efYd)];}));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(h),'변경 감지 기록');}
+ XLSX.writeFile(wb,name);
+}
+
+/* ---------- 이벤트 ---------- */
+document.addEventListener('click',function(e){
+ var t=e.target;
+ if(t.id==='sampleBtn'){sample=true;data=makeSample();history=[{detectedAt:data.laws[allNames()[0]].changedAt,name:allNames()[0],kind:'일부개정',fromAncYd:'20250101',toAncYd:data.laws[allNames()[0]].ancYd,efYd:data.laws[allNames()[0]].efYd}];render();return;}
+ if(t.id==='xlsxBtn'){exportXlsx();return;}
+ var k=t.dataset&&t.dataset.done;
+ if(k){var rv=prefs.reviews[k]=prefs.reviews[k]||{};rv.done=!rv.done;rv.date=rv.done?new Date().toISOString().slice(0,10):'';savePrefs();render();}
+});
+document.addEventListener('change',function(e){
+ var t=e.target;
+ if(t.id==='days'){prefs.days=+t.value;savePrefs();render();return;}
+ var box=t.closest&&t.closest('.review');
+ if(box&&t.dataset.f){var k=box.dataset.key,rv=prefs.reviews[k]=prefs.reviews[k]||{};rv[t.dataset.f]=t.value;savePrefs();}
+});
+
+/* ---------- 시작 ---------- */
+fetch('laws-config.json?t='+Date.now(),{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json();}).then(function(c){
+ cfg=c;$('#subtitle').textContent='법규등록부에 등록된 '+c.groups.length+'개 분야, 법령 '+allNames().length+'개의 공포일·시행일을 매일 확인하고, 바뀐 법령과 관련 의무사항을 보여줍니다.';
+ return Promise.all([getJSON(dataUrls('law-data.json')).catch(function(){return null;}),getJSON(dataUrls('law-history.json')).catch(function(){return [];})]);
+}).then(function(r){
+ if(!r)return;data=r[0];history=Array.isArray(r[1])?r[1]:[];render();
+}).catch(function(){
+ $('#statusbar').innerHTML='<span><span class="dot bad"></span>설정 파일(laws-config.json)을 찾지 못했습니다. index.html과 같은 곳에 올려 주세요.</span>';
+});
+})();
+</script>
+</body>
+</html>
