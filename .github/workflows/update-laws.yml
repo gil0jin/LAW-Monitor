@@ -1,0 +1,30 @@
+name: 법령 개정 확인
+
+on:
+  schedule:
+    - cron: "23 21 * * *"   # 매일 오전 6시 23분(한국 시간)에 자동 실행
+  workflow_dispatch:         # Actions 화면의 [Run workflow] 버튼으로 바로 실행
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 국가법령정보 API 조회
+        env:
+          LAW_OC: ${{ secrets.LAW_OC }}
+          LAW_REFERER: ${{ vars.LAW_REFERER }}
+        run: python3 fetch_laws.py
+
+      - name: 결과 저장
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add law-data.json law-history.json || true
+          git diff --cached --quiet || git commit -m "법령 개정 현황 갱신"
+          git push
