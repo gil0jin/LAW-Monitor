@@ -1,7 +1,7 @@
 {
- "fetchedAt": "2026-11-22T10:23:16+09:00",
+ "fetchedAt": "2026-11-23T10:47:36+09:00",
  "ok": true,
- "message": "",
+ "message": "30개 중 1개 조회 실패",
  "laws": {
   "산업안전보건법": {
    "name": "산업안전보건법",
@@ -500,5 +500,7 @@
    ]
   }
  },
- "errors": {}
+ "errors": {
+  "공중위생관리법": "<urlopen error timed out>"
+ }
 }
