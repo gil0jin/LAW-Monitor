@@ -1,7 +1,7 @@
 {
- "fetchedAt": "2026-11-24T14:21:40+09:00",
+ "fetchedAt": "2026-11-25T13:16:40+09:00",
  "ok": true,
- "message": "30개 중 7개 조회 실패",
+ "message": "",
  "laws": {
   "산업안전보건법": {
    "name": "산업안전보건법",
@@ -248,7 +248,14 @@
    "dept": "산업통상부",
    "lawType": "대통령령",
    "status": "현행",
-   "upcoming": []
+   "upcoming": [
+    {
+     "ancYd": "20261124",
+     "ancNo": "36855",
+     "efYd": "20261127",
+     "kind": "일부개정"
+    }
+   ]
   },
   "도시가스사업법 시행규칙": {
    "name": "도시가스사업법 시행규칙",
@@ -500,13 +507,5 @@
    ]
   }
  },
- "errors": {
-  "수도법 시행규칙": "<urlopen error [Errno -3] Temporary failure in name resolution>",
-  "실내공기질 관리법": "<urlopen error [Errno -3] Temporary failure in name resolution>",
-  "실내공기질 관리법 시행령": "<urlopen error [Errno -3] Temporary failure in name resolution>",
-  "실내공기질 관리법 시행규칙": "<urlopen error [Errno -3] Temporary failure in name resolution>",
-  "승강기 안전관리법": "<urlopen error [Errno -3] Temporary failure in name resolution>",
-  "승강기 안전관리법 시행령": "<urlopen error [Errno -3] Temporary failure in name resolution>",
-  "승강기 안전관리법 시행규칙": "<urlopen error [Errno -3] Temporary failure in name resolution>"
- }
+ "errors": {}
 }
